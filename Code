@@ -1,0 +1,1540 @@
+# Big Data Analysis and Forecasting of GBP/USD Exchange Rates Using Distributed Machine Learning and Macroeconomic Sentiment Integration
+
+# Table of content
+
+# [Component 1:	Topic proposal](#intro)
+## 1.1. Project Background and Motivation
+## 1.2. Objectives, Dataset, Hypotheses, and Research Questions
+## 1.3. Relevance of Forex Analysis in Big Data
+## 1.4. Planned Analysis & Business Application, Technologies Used
+
+# [Component 2: Implementation](#d)
+# [Data Acquisition, Storage and Distributed Processing](#dd)
+## Handling Missing Values
+
+# [Exploratory Data Analysis (EDA)](#eda)
+## 2.1. Visualizing Trends and Patterns
+## 2.2. Correlation Analysis and Distribution  
+
+# [Modeling and Forecasting](#model)
+## 3.1. Baseline Model
+### 3.1.1. Simple Moving Average
+### 3.1.2. Bollinger Bands
+## 3.2. Advanced Models
+### 3.2.1. Linear Regression with Lag Features (Forecasting)
+### 3.2.2. Logistic Regression for Directional Prediction
+### 3.2.3. Random Forest 
+### 3.2.4. Gradient Boosting 
+### 3.2.5. Using Macroeconomic Features in ML Models & Optimization
+
+# [Results and Discussion](#results)
+## Summary of Findings
+## Comparative Analysis (Yearly Trends and Other Currency Pairs)
+## Discussion on GBPUSD Behavior and Volatility
+
+# [Component 3:	Limitations and Scalability](#limit)
+
+# [Component 4:	Conclusion](#con)
+
+
+# [References](#ref)
+
+
+
+# Component 1:	Topic proposal<a name="intro"></a>
+
+## 1.1. Project Background and Motivation
+
+We are all know the foreign exchange (forex) market is very important to our economy, famous by its vast liquidity and dynamic nature. It is one of the most critical financial markets globally (Hull, 2018). I chose the GBPUSD pair for in-depth analysis in this project because it has a rich history and is the oldest actively traded currency on the forex market(IG. "What Are the Top 10 Most Traded Currencies in the World?,https://www.tastyfx.com/news/what-are-the-top-10-most-traded-currencies-in-the-world-200115/). It represents the exchange rate between the British pound and the US dollar, two economically significant currencies. Additionally, examining major currency pairs can help uncover correlations within the global economy, which further piqued my curiosity. In this project, historical datas of 4 main currency pairs will be downloaded and analysed using big data techniques with distributed processing tools such as Hadoop HDFS, Spark, and Spark MLlib, with PySpark serving as the primary programming environment(Zaharia et al., 2016).
+
+The motivation for this study light up after reading the analysis from JP Morgan Chase paper about Market outlook 2025: Navigating cross-currents, it give me an idea of forecasts for major currency pairs. I was passionate about how can I apply my big data technique to predict the market price on the big time series data, that I can distributed storage with HDFS and processing it using Spark DataFrames in Spark Machine Learning library -which is different from the Pandas environment. By developing predictive models that forecast future currency movements, I aim to gain valuable insights into both short-term fluctuations and long-term trends. Ultimately, this study give us all different view of forex market behavior, volatility, and trend dynamics while challenging myself to apply cutting-edge big data methodologies in financial forecasting.
+
+## 1.2 Objectives, Dataset, Hypotheses, and Research Questions
+
+The primary objective of this project is to leverage big data technologies to analyze historical currency exchange rate data collect from Yahoo Finance and to develop predictive models that forecast future price movements. Some keys study are to understand the typical behavior and volatility of GBPUSD by calculating daily changes and identifying periods of unusual market activity, and predicting using baseline model such as simple moving average, bolinger Band and try with more advange model as Random Forest, Gradient Boosting, and regression techniques that incorporate lag features that work with Spark Machine Learning Library. Minimise the use of Pandas DataFrame, leverage the use of RDD and Spark dataFrame to ensure scalability and efficiency in data processing. Examine the relationships between GBPUSD and key macroeconomic indicators like GDP, inflation, and unemployment from 3 of the 5 core ereas (the five factors that tend to affect all currencies the greatest include monetary policy, price inflation, confidence and sentiment, economic growth (GDP), and the balance of payments)(https://www.investopedia.com/articles/forex/11/five-reports-affect-the-pound.asp). -by integrating these data sources, to master of storage data in Hadoop, again combine the macroeconomic indicators data with the currency data to have in-deep understand the correlation between all factors to the price movement. 
+
+There are some research questions that I want to answer in this project:
+
+- How do exchange rate trends evolve over time across these currencies?
+- Are there significant correlations or patterns between specific currency pairs?
+- Can machine learning models forecast future currency trends given historical data?
+
+Hypotheses:
+
+- Trend Analysis: Exchange rates for these currencies exhibit distinct trends during periods of economic instability.
+- Correlation Analysis: Certain currency pairs (e.g., AUD, CAD, NZD—often influenced by commodity prices) show higher correlation during market stress.
+- Predictive Modeling: Using Spark MLlib, time series forecasting models can predict short-term fluctuations with reasonable accuracy.
+
+Empirical tasks will be how the data being fetch from yahoo finance and World Bank Open Data(wbdata), clean it and preprocess it using PySpark.Then when the data is ready some Exploratory analysis and visualization of time-series data will be imply. leverage it with some statisctial testing and finally build and eveluate each forecasting models using Spark MLlib. 
+
+## 1.3. Relevance of Forex Analysis in Big Data
+
+This study is clearly relevant from both academic and practical perspectives. Academically, I can demonstrate what I have learn about Big Data Analysis, how to use hadoop to process large datasets aligns with contemporary trends in data science , how to distributed storage data in HDFS, how I can interact, process the data with Spark DataFrames, how can I get myself familiar with using Spark ML Lib for predicting model. 
+
+Practically, the insights derived from this analysis can inform trading strategies, risk management, and policy-making. By understanding the nuances of GBPUSD behavior—whether through identifying periods of high volatility, linking price movements to macroeconomic events, or accurately forecasting future prices—traders and analysts are better positioned to make informed decisions in a fast-paced market. The methodology and findings from this study can also be adapted to other currency pairs or financial instruments, underscoring the broader impact and applicability of the work.
+
+In summary, this project not only meets the technical and methodological requirements of a big data analysis course but also contributes meaningful insights into forex market dynamics, ultimately bridging the gap between data-driven research and real-world financial applications.
+
+## 1.4. Planned Analysis & Business Application, Technologies Used
+
+The dataset contains historical exchange rate data of the 7 pairs EUR, GBP, AUD, CAD, NZD, JPY, CHF versus USD from 2 sources Yahoo Finance and Alpha Vantage because they aggregate data from different liquidity providers, banks, or exchanges and time zone different, and they have some data that the other don't. Another dataset is macroeconomic indicators from World Bank; it will be processed using PySpark on a distributed cluster to handle the large-scale data efficiently. The process will load forex and macroeconomic dataset into HDFS (Hadoop Distributed File System), ensuring scalability. Step by step data transformation will include handling missing values, aligning time zones, and aggregating data at different time intervals (daily, weekly, and monthly). Beside that, I will calculate summary statistics such as mean, standard deviation, and volatility measures for each currency pair. The data will be stored and processed in Spark DataFrames and RDDs, I want to minimise the use of Pandas to ensure optimized performance on distributed infrastructure, however, something like plot the data with Matplotlib I have to convert the data to pandas dataFrame because PySpark DataFrame does not support native plotting, It optimised for distributed computing and unfortunately does not have built-in support for visualization libraries such as Matplotlib, Seaborn.
+
+A comprehensive Exploratory Data Analysis (EDA) will be processed to uncover patterns and relationships within the exchange rate data. I will create Time-series visualizations to analyze trends and seasonality in GBP/USD movements over time. Some indicators will be computed such as Moving averages, Bollinger Bands, and volatility measures to identify periods of market instability. The important role of EDA is correlation analysis between different currency pairs (e.g., GBP/USD vs. EUR/USD or AUD/USD vs. CAD/USD) to understand their interdependencies. Moreover, I will test the influence of macroeconomic indicators (GDP, inflation, unemployment) on GBP/USD movements using statistical correlation tests.
+
+I developed and deployed some forecasting models using Spark MLlib, leveraging the parallel processing power of PySpark. I will explore both traditional time-series models such as Simple Moving Average, Bollinger Bands and more advanced models like Linear Regression, Logistic Regression, Random Forest, Gradient Boosting, K-mean Clustering. More importantly, I will compute the feature engineering to  improve model performance, including creating lag features, rolling averages, and integrating macroeconomic indicators into the predictive framework. Then the models will be trained and validated using distributed cross-validation techniques, ensuring robustness. I will evaluate the model performance based on metrics such as RMSE, MAE, and R² to determine the best approach for forecasting future exchange rate movements.
+
+The key findings from this project will apply in businesses and the finance sector particularly in risk management, international trade, and forex hedging strategies. The benefit of accurately forecasting exchange rates can help financial institutions, multinational corporations, and forex traders optimize their hedging strategies, reduce currency exposure risks, and make informed trading decisions. The combination of forex data and macroeconomic insights will give us a holistic view of the market, helping businesses in planning capital flows, managing inflation risks, and enhancing investment decisions in foreign currencies. Finally, this project will contribute to data-driven decision-making in financial markets by leveraging big data analytics and machine learning techniques using Pyspark.
+
+# Component 2: Implementation<a name="d"></a>
+
+# Data Acquisition, Storage and Distributed Processing<a name="dd"></a>
+
+As I said above for the Forex dataset, I fetched the data from 2 sources Yahoo Finance and Alpha Vantage for seven major currency pairs (EUR, GBP, AUD, CAD, NZD, JPY, CHF) against USD, covering the period from 2000 to 2025. With the Yahoo Finance dataset, I scraped it using yfinance library with daily intervals, store it as a Pandas DataFrame and convert it to Spark DataFrameusing spark.createDataFrame(df), as yfinance.download() returns a Pandas DataFrame, it does not support direct Spark DataFrame conversion. Same for Alpha Vantage was accessed through its FX_DAILY API endpoint, as I don’t have premium access to get the intraday data so I chose FX_DAILY API endpoint. Again it returns data as a CSV string, processed into an RDD and then converted to Spark DataFrame, because Spark can not read directly from an API, since the API response is in text format so it must first be processed as a Pandas DataFrame then parsed into Spark DataFrame. I merged both dataset using date (Yahoo Finance) or timestamp (Alpha Vantage) as the primary key, to make sure it was a structured and scalable approach to handle large financial data efficiently on PySpark. I set the API rate limits to introduce pauses between requests. 
+
+After loading them into Spark DataFrames, I standardized the date format using to_date() and ensured data consistency by ordering records by date. Then, I merged both datasets using an outer join on the "Date" column, handling missing values by coalescing non-null values from either source. Finally, I saved the cleaned data and merged dataset as a Parquet file (full_data.parquet) load it in HDFS with the command 
+
+##### Create a directory in HDFS
+- hdfs dfs -mkdir -p /user/tnguy001/Coursework2
+
+##### Check if HDFS is accessible from your Spark session
+- hdfs dfs -ls /user/tnguy001/Coursework2/
+
+##### Write the Parquet file in HDFS
+- forex_df.write.parquet("hdfs://lena-master/user/tnguy001/Coursework2/forex_data.parquet", mode="overwrite")
+- forex_df.write.parquet("hdfs://lena-master/user/tnguy001/Coursework2/forex_data_yfinance.parquet", mode="overwrite")
+- forex_df.write.parquet("hdfs://lena-master/user/tnguy001/Coursework2/full_data.parquet", mode="overwrite")
+
+##### Check if the files is there
+- hdfs dfs -ls /user/tnguy001/Coursework2/
+
+
+# General Utilities
+import datetime
+import time
+import requests
+import numpy as np
+import pandas as pd
+#import wbdata
+from datetime import datetime
+
+# Data Storage & Distributed Systems
+from hdfs import InsecureClient
+
+# Data Visualization
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+from tabulate import tabulate
+
+# PySpark Setup
+from pyspark.sql import SparkSession, Row
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+from pyspark.sql.functions import col, to_date, year, corr, count, when, coalesce, lit
+
+# Financial Data Extraction
+import yfinance as yf
+
+# Machine Learning & Statistical Analysis (PySpark MLlib)
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.stat import Correlation
+
+# Regression Models
+from pyspark.ml.regression import LinearRegression, RandomForestRegressor, GBTRegressor
+
+# Classification Models
+from pyspark.ml.classification import LogisticRegression
+
+# Clustering Models
+from pyspark.ml.clustering import KMeans
+from pyspark.ml.evaluation import ClusteringEvaluator
+
+# Model Evaluation
+from pyspark.ml.evaluation import RegressionEvaluator, MulticlassClassificationEvaluator
+from pyspark.mllib.evaluation import RegressionMetrics
+
+# Hyperparameter Tuning
+from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
+
+# Scikit-Learn Models & Metrics (for additional validation)
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
+
+
+### Spark Session Setup and DataFrame Operations
+
+# Initialize Spark session
+spark = SparkSession.builder.appName("AlphaVantageForexData").getOrCreate()
+sc = spark.sparkContext
+
+### Download historical data from Yfinance
+
+# List of currencies to compare with USD
+currencies = ["EUR", "GBP", "AUD", "CAD", "NZD", "JPY", "CHF"]
+
+# Set date range for historical data
+start_date = "2000-01-01"
+end_date = "2025-02-27"
+
+# Initialize an empty DataFrame to union data from each pair
+forex_df = None
+
+# Fetch data for each forex pair
+for currency in currencies:
+    df = yf.download(currency+'USD=X', start=start_date, end=end_date, interval="1d")
+    df.columns = df.columns.droplevel('Ticker')
+    
+    # Reset the index to convert it to a column
+    df.reset_index(inplace=True)
+    
+    # Convert to Spark dataframe
+    df = spark.createDataFrame(df)
+    
+    for col_name in df.columns:
+        if col_name != "Date":
+            df = df.withColumnRenamed(col_name, f"{col_name.lower()}_{currency}")
+    
+    # Merge (join) the DataFrame by 'Date'
+    if forex_df is None:
+        forex_df = df
+    else:
+        forex_df = forex_df.join(df, on="Date", how="outer")
+    
+    # Pause to respect API rate limits
+    time.sleep(15)
+
+df = df.withColumn("Date", to_date(col("Date"), "yyyy-MM-dd"))
+forex_df = forex_df.orderBy("Date")
+
+# Save the combined DataFrame as a Parquet file in HDFS
+forex_df.write.parquet("hdfs://lena-master/user/tnguy001/Coursework2/forex_data_yfinance.parquet", mode="overwrite")
+
+### Download data from Alpha Vantage
+
+# Alpha Vantage API key and base URL
+api_key = 'W5XSOOR67WTWNOHU'
+base_url = "https://www.alphavantage.co/query"
+
+# List of currencies to compare with USD
+currencies = ["EUR", "GBP", "AUD", "CAD", "NZD", "JPY", "CHF"]
+
+# Initialize an empty DataFrame to union data from each pair
+forex_df = None
+
+for currency in currencies:
+    # Use the FX_DAILY endpoint (free tier) for daily data
+    params = {
+        "function": "FX_DAILY",
+        "from_symbol": currency,
+        "to_symbol": "USD",
+        "outputsize": "full",       # Retrieve the full dataset available
+        "datatype": "csv",
+        "apikey": api_key
+    }
+    
+    # Make the API request
+    response = requests.get(base_url, params=params)
+    if response.status_code == 200:
+        csv_data = response.text
+    else:
+        print(f"API request for {currency} failed with status code: {response.status_code}")
+        continue
+
+    # Split the CSV text into lines
+    lines = csv_data.splitlines()
+    # Filter out any lines that contain premium endpoint messages or metadata
+    valid_lines = [line for line in lines if not line.strip().startswith("{")]
+    
+    if not valid_lines:
+        print(f"No valid data found for {currency}")
+        continue
+
+    # Create an RDD from the valid CSV lines
+    rdd = sc.parallelize(valid_lines)
+    
+    # Read the CSV data from the RDD into a Spark DataFrame
+    df = spark.read.option("header", "true") \
+                   .option("inferSchema", "true") \
+                   .csv(rdd)
+    
+    for col_name in df.columns:
+        if col_name != "timestamp":
+            df = df.withColumnRenamed(col_name, f"{col_name}_{currency}")
+    
+    # Merge (join) the DataFrame by 'timestamp'
+    if forex_df is None:
+        forex_df = df
+    else:
+        forex_df = forex_df.join(df, on="timestamp", how="outer")
+    
+    # Pause to respect API rate limits
+    time.sleep(15)
+
+
+# Convert the 'timestamp' column to a proper Date and drop the original timestamp
+forex_df = forex_df.withColumn("Date", to_date("timestamp", "yyyy-MM-dd")).drop("timestamp")
+forex_df = forex_df.orderBy("Date")
+
+# Show a few rows of the combined DataFrame
+forex_df.show(5)
+
+# Save the combined DataFrame as a Parquet file in HDFS
+forex_df.write.parquet("hdfs://lena-master/user/tnguy001/Coursework2/forex_data.parquet", mode="overwrite")
+
+row_count = forex_df.count()
+print("Total number of rows:", row_count)
+
+
+### Read the data from memory
+
+# Load the data into a Spark DataFrame from Parquet file
+forex_yfinance = spark.read.parquet("hdfs://lena-master/user/tnguy001/Coursework2/forex_data_yfinance.parquet")
+
+# Show first few rows
+forex_yfinance.show(5)
+
+# Reading Parquet file from HDFS
+forex_df = spark.read.parquet("hdfs://lena-master/user/tnguy001/Coursework2/forex_data.parquet")
+
+# Show first few rows
+forex_df.show(5)
+
+
+# Check for missing values: Count nulls in each column for the Alpha Vantage dataset
+forex_df.select([F.count(F.when(F.col(c).isNull(), c)).alias(c) for c in forex_df.columns]).show()
+
+
+2311 rows with missing values # talk about it 
+
+#Inspect the Schema
+forex_yfinance.printSchema()
+forex_df.printSchema()
+
+### Merge the Yahoo finance and Alpha Vantage datasets
+
+df1,df2 = forex_df,forex_yfinance
+
+# Add _df1 or _df2 to column names to distinguish them
+df1 = df1.select(*[col(c).alias(c + "_df1") if c != "Date" else col(c) for c in df1.columns])
+df2 = df2.select(*[col(c).alias(c + "_df2") if c != "Date" else col(c) for c in df2.columns])
+
+# Perform an outer join on 'Date' to merge the dataframes
+merged_df = df1.join(df2, on="Date", how="outer")
+
+# Replace null values by choosing non-null values where available
+for col_name in df1.columns:
+    if col_name != "Date":  # Skip the "Date" column since it's the join key
+        short_name = col_name[:-4]
+        merged_df = merged_df.withColumn(short_name, coalesce(col(col_name), col(short_name + "_df2")))
+
+# Drop the original duplicate columns (suffix "_df1" and "_df2")
+columns_to_drop = [col_name for col_name in df1.columns if col_name != "Date"] + \
+                  [col_name for col_name in df2.columns if col_name != "Date"]
+merged_df = merged_df.drop(*columns_to_drop)
+
+full_data_df = merged_df
+full_data_df = full_data_df.orderBy(col("Date"))
+full_data_df = full_data_df.withColumn("Date", to_date(full_data_df["Date"]))
+
+        
+# Show results
+full_data_df.show(5)
+
+
+full_data_df.write.parquet("hdfs://lena-master/user/tnguy001/Coursework2/full_data.parquet", mode="overwrite")
+
+### Reading Parquet file from HDFS
+
+forex_df = spark.read.parquet("hdfs://lena-master/user/tnguy001/Coursework2/full_data.parquet")
+
+forex_df.show(5)
+
+forex_df.head()
+
+row_count = forex_df.count()
+print("Total number of rows:", row_count)
+
+
+forex_df.printSchema()
+
+## Handling Missing Values
+
+# Check for missing values: Count nulls in each column
+forex_df.select([F.count(F.when(F.col(c).isNull(), c)).alias(c) for c in forex_df.columns]).show()
+
+
+# Filter out rows with missing values in the specified columns
+forex_df = forex_df.dropna()
+
+
+# Check for missing values: Count nulls in each column
+forex_df.select([F.count(F.when(F.col(c).isNull(), c)).alias(c) for c in forex_df.columns]).show()
+
+
+# Exploratory Data Analysis (EDA)<a name="eda"></a>
+## 2.1. Visualizing Trends and Patterns
+
+I processed and visualized data using PySpark and Pandas, as you know some of the visual libraries do not work directly with PySpark. After reading the forex data from the Parquet file, I did filter out rows with missing values in the specified columns to make it ready to convert it to Pandas DataFrame for visualisation. Check if the type of the data is appropriate for plotting when it all already. I plotted the exchange rate of EUR, GBP, AUD, CAD, NZD, JPY, and CHF against the USD, to see the trends. Note that the Japanese Yen has a small value against the USD so I multiplied it to 100 to have a better view. I am living in the UK so i have interested in GBP/USD for that reason I analyse GBP/USD, I calculated a 30 days moving average (GBP_MA30) and rolling standard deviation (GBP_STD30) using PySpark’s window functions to smooth out short-term fluctuations and highlight longer-term trends, measuring volatility over time.
+
+I then adding some economic events and their period such as the 2008 Financial Crisis, Brexit, COVID-19, and the UK government’s tax plan, to observe their impact on exchange rates. Beside that, I identified potential change points in the GBP/USD moving average by computing the daily absolute difference (GBP_MA30_diff) and flagging significant deviations beyond a predefined threshold(more detail later). Finally, I visualized both the GBP/USD exchange rate with historical economic events and highlighted periods where the moving average experienced notable shifts. 
+
+
+
+#### Visualizing Trends and Patterns
+
+# Convert to Pandas DataFrame for plotting
+forex_pd = forex_df.toPandas()
+# Sort dataframe by Date
+forex_pd = forex_pd.sort_values(by="Date")
+# Display Pandas DataFrame
+print(forex_pd.dtypes)
+print(forex_pd.head())
+
+forex_pd_JPY = 100*forex_pd["close_JPY"]
+# Plot the trends for each currency pair
+plt.figure(figsize=(12,6))
+plt.plot(forex_pd["Date"], forex_pd["close_EUR"], label="EUR/USD")
+plt.plot(forex_pd["Date"], forex_pd["close_GBP"], label="GBP/USD")
+plt.plot(forex_pd["Date"], forex_pd["close_AUD"], label="AUD/USD")
+plt.plot(forex_pd["Date"], forex_pd["close_CAD"], label="CAD/USD")
+plt.plot(forex_pd["Date"], forex_pd["close_NZD"], label="NZD/USD")
+plt.plot(forex_pd["Date"], forex_pd_JPY, label="100 JPY/USD")
+plt.plot(forex_pd["Date"], forex_pd["close_CHF"], label="CHF/USD")
+
+# Labels and Title
+plt.xlabel("Date")
+plt.ylabel("Exchange Rate")
+plt.title("Currency Exchange Rate Trends Against USD")
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid()
+
+# Show the plot
+plt.show()
+
+It downtrend in the whole but if we look closely into each period then we can see some short-term fluctuation and long-term downtrend. So to have a in-deep understand the trends and patterns I computed the Moving Averages techniques GBP_MA30(30-day moving average) and GBP_STD30(30-day rolling standard deviation) to highlight some spikes in the data. 
+
+#### 1. Data Smoothing and Trend Extraction
+
+# Convert Date column to proper date type (adjust format as needed)
+forex_df = forex_df.withColumn("Date", F.to_date("Date", "yyyy-MM-dd"))
+
+# Define a 30-day rolling window (last 29 rows + current row)
+windowSpec30 = Window.orderBy("Date").rowsBetween(-29, 0)
+
+# Compute the 30-day moving average for GBP/USD exchange rate
+forex_df = forex_df.withColumn("GBP_MA30", F.avg("close_GBP").over(windowSpec30))
+
+# Compute the 30-day rolling standard deviation for GBP/USD exchange rate (volatility)
+forex_df = forex_df.withColumn("GBP_STD30", F.stddev("close_GBP").over(windowSpec30))
+
+
+
+# Visualization is done outside of Spark.
+forex_pd = forex_df.select("Date", "close_GBP", "GBP_MA30", "GBP_STD30").orderBy("Date").toPandas()
+forex_pd = forex_pd.dropna()
+print(forex_pd)
+
+#Plot the 30 day moving average
+plt.figure(figsize=(12,6))
+plt.plot(forex_pd["Date"], forex_pd["close_GBP"], label="GBP/USD", color="blue")
+plt.plot(forex_pd["Date"], forex_pd["GBP_MA30"], label="GBP/USD 30-Day MA", linestyle="--", color="red")
+plt.xlabel("Date")
+plt.ylabel("Exchange Rate")
+plt.title("GBP/USD and its 30-Day Moving Average")
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+
+# Plot the rolling standard deviation (volatility)
+plt.figure(figsize=(12,6))
+plt.plot(forex_pd["Date"], forex_pd["GBP_STD30"], label="GBP/USD 30-Day Rolling Std Dev", color="green")
+plt.xlabel("Date")
+plt.ylabel("Volatility")
+plt.title("GBP/USD 30-Day Rolling Standard Deviation")
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+We can see some spikes in the data for example in around 2008, 2016,2020,2022. It had a big movement aound those period. So I annotated historical economic events around those period such as the 2008 Financial Crisis, 2016 Brexit, 2020COVID-19, and the end 2022 the UK government’s tax plan helps pinpoint external factors influencing exchange rates.
+
+### Annotate Known Economic Events
+Mark key dates (e.g., the 2008 financial crisis, Brexit, or other market stress events) on my plot.
+Segment the data into “stable” and “unstable” periods and compute summary statistics (mean, median, and volatility) for GBP/USD entirely within Spark. Although visual annotations (like vertical lines) are done outside Spark in Matplotlib, so I convert results to Pandas for visualization.
+
+# Create a new column 'period' based on specified event date ranges
+forex_df = forex_df.withColumn(
+    "period",
+    F.when((F.col("Date") >= F.lit("2008-09-15")) & (F.col("Date") <= F.lit("2009-03-01")), "2008 Crisis")
+     .when((F.col("Date") >= F.lit("2020-03-01")) & (F.col("Date") <= F.lit("2020-06-30")), "COVID")
+     .when((F.col("Date") >= F.lit("2016-06-23")) & (F.col("Date") <= F.lit("2016-07-15")), "Brexit")
+     .when((F.col("Date") >= F.lit("2022-07-01")) & (F.col("Date") <= F.lit("2022-11-01")), "Liz Truss spending and tax plan")
+     .otherwise("stable")
+)
+
+# Display the first few rows to check the segmentation
+forex_df.select("Date", "period", "close_GBP").orderBy("Date").show(truncate=False)
+
+forex_df.filter(
+    (F.col("Date") >= F.lit("2008-09-15")) & (F.col("Date") <= F.lit("2009-03-01"))
+).select("Date", "period", "close_GBP") \
+ .dropna() \
+ .orderBy("Date") \
+ .show(10, truncate=False)
+
+
+
+# Group the data by 'period' and calculate mean, median, and standard deviation
+summary_stats = forex_df.groupBy("period").agg(
+    F.mean("close_GBP").alias("mean_close_GBP"),
+    F.expr("percentile_approx(close_GBP, 0.5)").alias("median_close_GBP"),
+    F.stddev("close_GBP").alias("std_close_GBP")
+)
+
+summary_stats.show()
+
+
+plt.figure(figsize=(12,6))
+
+# Plot the GBP/USD exchange rate
+plt.plot(forex_pd["Date"], forex_pd["close_GBP"], label="GBP/USD", color="blue")
+
+# Annotate the unstable event periods with vertical shaded regions
+# 2008 Crisis: 15 September 2008 to 01 March 2009
+plt.axvspan(pd.to_datetime("2008-09-15"), pd.to_datetime("2009-03-01"), 
+            color='grey', alpha=0.3, label='2008 Crisis')
+
+# Brexit: 23 June 2016 to 15 July 2016
+plt.axvspan(pd.to_datetime("2016-06-23"), pd.to_datetime("2016-07-15"), 
+            color='orange', alpha=0.3, label='Brexit')
+
+# COVID: March 1, 2020 to 30 June 2020
+plt.axvspan(pd.to_datetime("2020-03-01"), pd.to_datetime("2020-06-30"), 
+            color='red', alpha=0.3, label='COVID')
+
+# Liz Truss spending and tax plan: 01 July 2022 to 01 November 2022
+plt.axvspan(pd.to_datetime("2022-07-01"), pd.to_datetime("2022-11-01"), 
+            color='purple', alpha=0.3, label='Liz Truss spending and tax plan')
+
+# Add labels and formatting
+plt.xlabel("Date")
+plt.ylabel("GBP/USD Exchange Rate")
+plt.title("GBP/USD Exchange Rate with Annotated Unstable Periods")
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+As we can see all the marking period has a big drop for the GBP, and the economic events is explainning why it happen. Now I want to detect market anomalies by computing the absolute difference in moving averages, I flagged significant shifts in GBP/USD trends with a define threshold 0.003 Based on sample data for GBP_MA30, the daily differences (GBP_MA30_diff) seem to be on the order of 0.001–0.002 during stable periods. So 0.003 will catch some spikes where the data has a high votility. 
+
+# Create a window ordered by Date to calculate the lag of GBP_MA30
+windowSpecLag = Window.orderBy("Date")
+
+# Add a column for the previous day's GBP_MA30
+forex_df = forex_df.withColumn("prev_GBP_MA30", F.lag("GBP_MA30").over(windowSpecLag))
+
+# Compute the absolute difference between the current and previous moving averages
+forex_df = forex_df.withColumn("GBP_MA30_diff", F.abs(F.col("GBP_MA30") - F.col("prev_GBP_MA30")))
+
+# Define a threshold for significant change in the moving average
+threshold = 0.003  
+
+# Flag rows where the difference exceeds the threshold as potential change points
+forex_df = forex_df.withColumn("change_point", F.when(F.col("GBP_MA30_diff") > threshold, 1).otherwise(0))
+
+# Display the first 20 rows to inspect the change points
+forex_df.select("Date", "close_GBP", "GBP_MA30", "prev_GBP_MA30", "GBP_MA30_diff", "change_point").dropna()\
+        .orderBy("Date")\
+        .show(20, truncate=False)
+
+
+# Convert the relevant columns to Pandas DataFrame
+forex_pd = forex_df.select("Date", "GBP_MA30", "GBP_MA30_diff", "change_point") \
+                   .orderBy("Date").toPandas()
+
+# Ensure Date is in datetime format
+forex_pd["Date"] = pd.to_datetime(forex_pd["Date"])
+
+# Define the threshold used (adjust if needed)
+threshold = 0.003
+
+# Plot 1: GBP 30-Day Moving Average with Change Points
+plt.figure(figsize=(12,6))
+plt.plot(forex_pd["Date"], forex_pd["GBP_MA30"], label="GBP 30-Day MA", color="blue")
+# Highlight change points (where change_point == 1)
+change_points = forex_pd[forex_pd["change_point"] == 1]
+plt.scatter(change_points["Date"], change_points["GBP_MA30"], color="red", 
+            label="Change Point", zorder=5, marker="o")
+plt.xlabel("Date")
+plt.ylabel("GBP 30-Day Moving Average")
+plt.title("GBP/USD 30-Day Moving Average with Change Points")
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+# Plot 2: Daily Absolute Difference in Moving Average with Threshold
+plt.figure(figsize=(12,6))
+plt.plot(forex_pd["Date"], forex_pd["GBP_MA30_diff"], label="Daily MA Difference", color="green")
+plt.axhline(y=threshold, color='red', linestyle='--', label=f"Threshold ({threshold})")
+plt.xlabel("Date")
+plt.ylabel("Absolute Difference in MA")
+plt.title("Daily Change in GBP 30-Day Moving Average")
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+If we chose the threshold 0.002 it would flag more points as significant changes, potentially picking up noise rather than actual trend shifts. But with 0.003 we filter out small, insignificant fluctuations and only capturing meaningful shifts in GBP/USD trends.
+
+## 2.2. Correlation Analysis and Distribution 
+
+A comprehensive correlation study and distribution conducted here using PySpark MLlib and visualisation techniques. First, I use VectorAssembler to transform multiple features into a single vector column, and then using the Saprk's Correlation.corr() method to compute the correlation matrix, convert it to Pandas DataFrame for visualisation with the Heatmap to identidy relationships between currency pairs. Next I calculated the rolling means and standard deviations over a 60 days window to normalised the exchange rate get it ready properly scaled for further analysis. I calculate the market stress vs stable condiions to compare the correlation between the pairs, segmenting the data by major financial crises like 2008, Brexit, COVID-19, and UK fiscal policies, and plotted side-by-side heatmaps to illustrate differences. And at the end I performed the Histogram distribution, by extract the currency prices from the RDD and plot it with the Hisplot to see whether the exchange rates followed normal patterns or not. 
+
+# Convert numerical columns into a single vector column for MLlib
+feature_cols = ["close_EUR", "close_GBP", "close_AUD", "close_CAD", "close_NZD", "close_JPY", "close_CHF"]
+vector_assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
+
+# Transform the dataframe
+forex_vector_df = vector_assembler.transform(forex_df).select("features")
+
+# Compute the correlation matrix
+correlation_matrix = Correlation.corr(forex_vector_df, "features").head()[0]
+
+# Convert correlation matrix to a readable format
+correlation_values = correlation_matrix.toArray()
+
+
+print(correlation_values)
+
+# Create a heatmap of the correlation matrix using Matplotlib
+plt.figure(figsize=(8, 6))
+plt.imshow(correlation_values, cmap="coolwarm", interpolation='none')
+
+# Add color bar
+plt.colorbar()
+
+# Set the axis labels
+plt.xticks(np.arange(len(feature_cols)), feature_cols, rotation=45)
+plt.yticks(np.arange(len(feature_cols)), feature_cols)
+# Annotate each cell with the correlation value
+for i in range(len(feature_cols)):
+    for j in range(len(feature_cols)):
+        plt.text(j, i, f"{correlation_values[i, j]:.2f}", 
+                 ha='center', va='center', color="black")
+
+# Set plot labels and title
+plt.title('Currency Correlation Matrix')
+plt.show()
+
+
+There are 3 keys points here:
+Strong Positive Correlations (Highly Related Currency Pairs) among Commodity Currencies (AUD, CAD, NZD) tend to move in the same direction due to their dependence on commodity exports and global risk sentiment.
+
+High correlation between GBP and EUR as it is both in Europe so affected by the economic and political events in Europe. It reflects their close financial and trading relationships. 
+
+Negative Correlation or we can call Safe-Haven Behaviour of JPY and CHF, they act independently. They have weaker correlation with major currencies and tend to move inversely to risk sensitive currencies. Suggest that this movement is less influenced by the global risk sentiment and suggest CHF their movement more likely affected by their own Switzerland-specific economic factors. 
+
+
+### 1. Compute Rolling Correlation Using Spark
+
+How correlations evolve over time for all currencies.
+We will now compute rolling correlations dynamically across all currency pairs.
+
+# Define rolling window (e.g., 60 days)
+rolling_window = Window.orderBy("Date").rowsBetween(-59, 0)
+
+# List of currency columns
+feature_cols = ["close_EUR", "close_GBP", "close_AUD", "close_CAD", "close_NZD", "close_JPY", "close_CHF"]
+
+# Compute rolling mean & std for normalization
+for col in feature_cols:
+    forex_df = forex_df.withColumn(f"{col}_mean", F.avg(col).over(rolling_window))
+    forex_df = forex_df.withColumn(f"{col}_std", F.stddev(col).over(rolling_window))
+    forex_df = forex_df.withColumn(f"{col}_normalized", 
+                                   (F.col(col) - F.col(f"{col}_mean")) / F.col(f"{col}_std"))
+
+# Check if columns were created
+print(forex_df.columns)
+
+
+# List normalized column names
+normalized_cols = [f"{col}_normalized" for col in feature_cols]
+
+# Drop rows where any of the normalized columns is NaN
+forex_df_clean = forex_df.dropna(subset=normalized_cols)
+
+
+assembler = VectorAssembler(
+    inputCols=normalized_cols, 
+    outputCol="features",
+    handleInvalid="error"  # With NaNs dropped, this should not cause issues.
+)
+
+# Transform the cleaned DataFrame
+forex_vector_df = assembler.transform(forex_df_clean).select("Date", "features")
+
+# Compute the correlation matrix
+rolling_correlation_matrix = Correlation.corr(forex_vector_df, "features").head()[0].toArray()
+print(rolling_correlation_matrix)
+# Convert correlation matrix to Pandas DataFrame for visualization
+rolling_corr_pd = pd.DataFrame(rolling_correlation_matrix, index=feature_cols, columns=feature_cols)
+
+plt.figure(figsize=(8, 6))
+plt.imshow(rolling_corr_pd, cmap="coolwarm", interpolation='none')
+plt.colorbar()
+plt.xticks(np.arange(len(feature_cols)), feature_cols, rotation=45)
+plt.yticks(np.arange(len(feature_cols)), feature_cols)
+plt.title('Rolling 60-day Currency Correlation')
+plt.show()
+
+
+The original correlation matrix represents long-term historial relationships between currency pairs showing persistent trends over the entire dataset. The rolling 60-day correlation matrix captures short-term fluctuations, meaning it reflects how correlations shift over time due to market conditions.
+
+High correlation between EUR and CHF which suprisingly againt the original one. CHF may lost its safe-haven status in recent periods. 
+In the short-term correlation between EUR-GBP has weaken likely due to Brexit aftershocks or BOE policies.
+
+Stable correlations (e.g., AUD-NZD, EUR-GBP) tend to persist, but others (EUR-CHF, CAD-CHF) fluctuate over time.
+When tracking rolling correlations helps spot opportunities where short-term relationships deviate from long-term trends, which can be useful for trading strategies.
+
+### Comparing Market Stress vs. Stability
+
+Correlations change during crisis vs. stable periods.
+
+stress_df = forex_df.filter(forex_df["period"] != "stable")  # Selects all stress periods
+stable_df = forex_df.filter(forex_df["period"] == "stable")  # Selects only stable periods
+
+# Verify data
+print("Stress Period Sample:")
+stress_df.select("Date", "period").show(5)
+
+print("Stable Period Sample:")
+stable_df.select("Date", "period").show(5)
+
+
+# Convert data into feature vectors
+vector_assembler = VectorAssembler(
+    inputCols=feature_cols,
+    outputCol="features",
+    handleInvalid="skip"  # Skip rows with NaNs
+)
+
+forex_vector_df = vector_assembler.transform(forex_df).select("features")
+
+stress_vector_df = vector_assembler.transform(stress_df).select("features")
+stable_vector_df = vector_assembler.transform(stable_df).select("features")
+
+# Compute correlation matrices
+stress_corr_matrix = Correlation.corr(stress_vector_df, "features").head()[0].toArray()
+stable_corr_matrix = Correlation.corr(stable_vector_df, "features").head()[0].toArray()
+
+# Convert to Pandas for easier visualization
+stress_corr_pd = pd.DataFrame(stress_corr_matrix, index=feature_cols, columns=feature_cols)
+stable_corr_pd = pd.DataFrame(stable_corr_matrix, index=feature_cols, columns=feature_cols)
+
+
+# Convert correlation matrices to NumPy arrays
+stress_corr_array = stress_corr_pd.to_numpy()
+stable_corr_array = stable_corr_pd.to_numpy()
+
+# Set figure size
+fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+
+# Titles for subplots
+titles = ["Correlation During Market Stress", "Correlation During Stability"]
+
+# Loop through both matrices (stress & stable) and plot them
+for i, data in enumerate([stress_corr_array, stable_corr_array]):
+    im = ax[i].imshow(data, cmap="coolwarm", interpolation="nearest")
+    
+    # Add color bar
+    cbar = plt.colorbar(im, ax=ax[i], fraction=0.046, pad=0.04)
+    
+    # Set title
+    ax[i].set_title(titles[i])
+    
+    # Set x and y axis labels (currency pairs)
+    ax[i].set_xticks(np.arange(len(feature_cols)))
+    ax[i].set_yticks(np.arange(len(feature_cols)))
+    ax[i].set_xticklabels(feature_cols, rotation=45, ha="right")
+    ax[i].set_yticklabels(feature_cols)
+
+# Show the final plot
+plt.tight_layout()
+plt.show()
+
+
+This two heatmaps show the relationships shift under different market conditions. As we can see under the market stress certain pairs like AUD, CAD, NZD may have stronger or weaker correlations compared to stable periods, strongly point out that the risk sentiment has a strogn influences commodity-linked currencies. In the other hand, Some currencies like JPY and CHF where we call it Safe-heaven currencies often exhibit negative or lower correlation during stress, indicating their role as refuges when investors avoid risk. In contrast, the “stability” heatmap shows generally higher correlations among risk-driven currencies, as they move more in tandem when the market is calm. These differences underscore the importance of contextualizing correlations within prevailing economic conditions, as they can vary significantly depending on whether markets are experiencing turmoil or relative tranquility.
+
+### Statistical Testing (Fisher’s Z-Test)
+
+Now, test whether correlation differences are statistically significant.
+
+def fisher_z_test(r1, r2, n1, n2):
+    """
+    Computes Fisher's Z-test for correlation differences.
+    r1, r2: Correlation coefficients for two periods
+    n1, n2: Number of observations in each period
+    """
+    z1 = 0.5 * np.log((1 + r1) / (1 - r1))
+    z2 = 0.5 * np.log((1 + r2) / (1 - r2))
+    
+    # Compute standard error
+    se = np.sqrt(1/(n1-3) + 1/(n2-3))
+    
+    # Compute test statistic
+    z_score = (z1 - z2) / se
+    
+    # Compute p-value
+    p_value = 2 * (1 - norm.cdf(abs(z_score)))
+    
+    return z_score, p_value
+
+# Run significance test for all currency pairs
+for c1 in feature_cols:
+    for c2 in feature_cols:
+        if c1 != c2:
+            r_stress = stress_corr_pd.loc[c1, c2]
+            r_stable = stable_corr_pd.loc[c1, c2]
+            n_stress = stress_df.count()
+            n_stable = stable_df.count()
+
+            z_score, p_value = fisher_z_test(r_stress, r_stable, n_stress, n_stable)
+
+            print(f"{c1}-{c2}: Z-score = {z_score:.3f}, P-value = {p_value:.3f}")
+
+
+p-value < 0.05 → Correlation significantly different between stress & stable periods. As I can see most of the currency pairs have a p-value of 0.000, which means that their correlations have changed during stress periods. However, There are some exceptions such as close_AUD-close_CHF (p = 0.089) and close_AUD-close_GBP (p = 0.055), but they didn't show significant correlation shifts. 
+
+Most extreme changes (|Z| > 10):
+AUD-JPY: -20.373 → JPY-AUD decoupled massively during stress.
+NZD-EUR: -16.029 → NZD & EUR moved very differently under stress.
+EUR-CHF: -14.405 → Safe-haven CHF became less correlated with EUR.
+CAD-NZD: -15.349 → CAD & NZD saw a large decoupling.
+
+For commodity currencies such as (AUD, CAD, NZD) their behaviour during the crises is very volatile. Investors need to reconsider their investment because correlations weaken as these currencies react differently to economic shocks. 
+
+With this statistical information the investor can consider whether they should invest in the Safe-Haven currencies (JPY, CHF) when the market is stressed. Just invest when it is stable. 
+
+### Distribution Analysis (Histogram using Matplotlib)
+
+
+# Convert cleaned DataFrame to RDD
+rdd = forex_df.rdd
+rdd = rdd.sortBy(lambda row: row['Date'])
+
+def print_some_rows(rdd, num_rows=5):
+    """
+    Prints the first few rows of an RDD or a list of Spark Row objects in a tabulated format.
+    Formats float values to 4 decimal places.
+    """
+    headers = [
+        'Date', 'open_EUR', 'high_EUR', 'low_EUR', 'close_EUR',
+        'open_GBP', 'high_GBP', 'low_GBP', 'close_GBP', 
+        'open_AUD', 'high_AUD', 'low_AUD', 'close_AUD',
+        'open_CAD', 'high_CAD', 'low_CAD', 'close_CAD', 
+        'open_NZD', 'high_NZD', 'low_NZD', 'close_NZD', 
+        'open_JPY', 'high_JPY', 'low_JPY', 'close_JPY', 
+        'open_CHF', 'high_CHF', 'low_CHF', 'close_CHF'
+    ]
+
+    # Take some sample rows from the RDD
+    sample_rows = rdd.take(num_rows)
+    
+    # Convert rows to a list of tuples (to match headers) and format floats
+    table_rows = []
+    for row in sample_rows:
+        formatted_row = []
+        for col in headers:
+            value = row.asDict().get(col, None)
+            if isinstance(value, float):  # Format only float values
+                formatted_row.append(f"{value:.4f}")
+            else:
+                formatted_row.append(value)  # Keep other types unchanged
+        table_rows.append(formatted_row)
+
+    # Print table
+    print(tabulate(table_rows, headers=headers, tablefmt='pretty'))
+
+
+
+# Show first few rows in RDD
+print_some_rows(rdd)
+
+
+# Extract currency values (GBPUSD, EURUSD, AUDUSD, CADUSD) from the RDD
+feature_cols = ["close_EUR", "close_GBP", "close_AUD", "close_CAD", "close_NZD", "close_JPY", "close_CHF"]
+currency_data = {col: rdd.map(lambda row: row[col]).collect() for col in feature_cols}
+
+# Plot histograms for the currency pairs using Matplotlib
+plt.figure(figsize=(12, 8))
+
+# Loop through the currency pairs and plot their histograms
+for i, col in enumerate(feature_cols, 1):
+    plt.subplot(3, 3, i)  # Adjusted grid to 3x3
+    plt.hist(currency_data[col], bins=50, color=plt.cm.Set1(i / len(feature_cols)), edgecolor='black')
+    plt.title(f'{col} Distribution')
+
+# Adjust layout and show the plot
+plt.suptitle('Histograms of Currency Pairs', fontsize=16)
+plt.tight_layout()
+plt.subplots_adjust(top=0.92)
+plt.show()
+
+This histogram is providing us a very good view of highly distinct behaviours across 7 major currency pairs. It reflects really well differences in market sentiment, economic fundamentals and safe-haven status. Looking at the graph we can note EUR, GBP, CAD appear like a bell-shaped with single peaks, suggesting a relatively stable central value over time. And with the JPY, it has a narrower band of values, reflecting lower daily variability in the raw “close” scale (though percentage movements can still be significant). However, the AUD and NZD show broader or multiple modes, highlighting the potential regime changes or fluctuations in commodity-driven markets. But with GBP, it stretches toward a higher value nearly 2.0, indicating periods when GBP was stronger against USD. Another one to look at us the CHF, it spans from 0.7 to 1.4 it clearly shifts over time, likely tied to safe-haven flows. There are 2 currency pairs that spread over the time NZD and AUD suggest higher historical volatility. 
+
+# Modeling and Forecasting<a name="model"></a>
+To have a complete understanding of the forex data I establish the baseline model (Simple Moving Average and Bollinger Bands) to gauge the predictive power of traditional straightforward techniques. Then, I apply more advanced models such as linear regression with lag features, Random forest, gradient boosting, and so on to capture more complex relationships in the data. Beside that I perform the K-mean clusters to detect different market regimes. Additionally, I fetched some macroeconomic indicators such as GDP, inflation and unemployment into these models to see how they interact, and used hyperparameter tuning to optimize model performance.
+
+## 3.1. Baseline Model
+### 3.1.1 Simple Moving Average(SMA)
+
+I am using this SMA to get a better understanding- How well does a simple moving average forecast future currency prices based on past data?
+
+To do that I define a rolling window using Spark's window functions,with a defined window size and create a window specification that can order my data by "Date" columns on the previous 10 days. I use this window to calculate the average of the "close_GBP" column over that period. It help to smooth out short-term fluctuations and highlight the underlying trend. This MA will be the baseline prediction for future prices. And lastly, I use some built-in RegressionMetrics to evaluate the result. 
+
+
+# Define the window size (10, 20, or 30 days)
+window_size = 10  # You can change this to 20 or 30
+
+# Create a window specification to calculate the moving average over the last N days
+window_spec = Window.orderBy("Date").rowsBetween(-window_size, -1)  
+
+# Calculate the Simple Moving Average for GBPUSD 
+forex_df_ma = forex_df.withColumn('SMA', F.avg('close_GBP').over(window_spec))
+
+# Select Date, GBPUSD, and SMA columns for analysis
+forex_df_ma = forex_df_ma.select('Date', 'close_GBP', 'SMA')
+
+# Calculate the squared difference between GBPUSD and SMA
+forex_df_ma = forex_df_ma.withColumn('squared_diff', (F.col('close_GBP') - F.col('SMA')) ** 2)
+
+# Calculate the mean of squared differences
+mean_squared_diff = forex_df_ma.select(F.avg('squared_diff')).first()[0]
+
+# Calculate RMSE by taking the square root of the mean squared difference
+rmse = mean_squared_diff ** 0.5
+
+print(f"Root Mean Squared Error (RMSE) = {rmse}")
+
+forex_df_ma = forex_df_ma.dropna()
+forex_df_ma= forex_df_ma.withColumnRenamed('close_GBP', 'label')  # Actual value
+forex_df_ma = forex_df_ma.withColumnRenamed('SMA', 'prediction')  # Predicted value
+
+# Convert the DataFrame to an RDD of tuples (label, prediction)
+predictions_rdd = forex_df_ma.rdd.map(lambda row: (row['label'], row['prediction']))
+
+# Create RegressionMetrics object
+metrics = RegressionMetrics(predictions_rdd)
+
+# Print multiple metrics
+print(f"RMSE: {metrics.rootMeanSquaredError}")
+print(f"Mean Squared Error (MSE): {metrics.meanSquaredError}")
+print(f"Mean Absolute Error (MAE): {metrics.meanAbsoluteError}")
+print(f"R2: {metrics.r2}")
+print(f"Explained Variance: {metrics.explainedVariance}")
+
+it seems like the Simple Moving Average (SMA) performs reasonably well, with less than 1% error in the predictions. However, SMA works best in stable markets where prices change gradually. In volatile or highly news-driven markets, this model's performance may degrade.
+
+Even though the error is small, it's still important to compare this model's performance with more advanced models, Random Forests, or LSTM, to see if the accuracy improves.
+
+### 3.1.2. Bollinger Bands
+
+Bollinger Bands are an effective technical analysis tool for capturing market volatility and identifying potential overbought or oversold conditions(# Bollinger Bands). For that reason I computed it for GBP/USD to see - How Volatile Is the Market?, Are Prices Overextended?
+
+I start to calculate SMA over the last 10 days along with the rolling standard deviation for the same window. The upper Bollinger Band was then derived by adding twice the standard deviation to the SMA, while the lower band was calculated by subtracting twice the standard deviation from the SMA. This approach effectively captures periods of high and low volatility—narrow bands indicating calm market conditions and wide bands signaling potential breakout periods. Lastly, I visualise the actual GBP/USD closing prices alongside the SMA and both Bollinger Bands with Matplotlib.
+
+# Define the window size and multiplier
+k = 2
+
+# Calculate the SMA over the window
+df_boll = forex_df.withColumn("SMA", F.avg("close_GBP").over(window_spec))
+
+# Calculate the standard deviation over the same window
+df_boll = df_boll.withColumn("stddev", F.stddev("close_GBP").over(window_spec))
+
+# Compute the upper and lower Bollinger Bands
+df_boll = df_boll.withColumn("upper_band", F.col("SMA") + k * F.col("stddev")) \
+                 .withColumn("lower_band", F.col("SMA") - k * F.col("stddev"))
+
+# Select the relevant columns to view the Bollinger Bands along with the original price
+df_boll.select("Date", "close_GBP", "SMA", "stddev", "upper_band", "lower_band").show(10)
+
+
+# Convert the Spark DataFrame (df_boll) to a Pandas DataFrame.
+pdf = df_boll.select("Date", "close_GBP", "SMA", "upper_band", "lower_band").toPandas()
+
+# Convert the Date column to datetime
+pdf["Date"] = pd.to_datetime(pdf["Date"])
+
+# Sort by date
+pdf = pdf.sort_values("Date")
+
+# Filter the data to show only the last 12 months.
+end_date = pdf["Date"].max()
+start_date = end_date - pd.DateOffset(months=12)
+pdf_12months = pdf[(pdf["Date"] >= start_date) & (pdf["Date"] <= end_date)]
+
+# Plot the results
+plt.figure(figsize=(12, 6))
+plt.plot(pdf_12months["Date"], pdf_12months["close_GBP"], label="GBPUSD", color="blue")
+plt.plot(pdf_12months["Date"], pdf_12months["SMA"], label="SMA", color="orange")
+plt.plot(pdf_12months["Date"], pdf_12months["upper_band"], label="Upper Band", color="green", linestyle="--")
+plt.plot(pdf_12months["Date"], pdf_12months["lower_band"], label="Lower Band", color="red", linestyle="--")
+plt.xlabel("Date")
+plt.ylabel("Price")
+plt.title("Bollinger Bands for GBPUSD (Last 12 Months)")
+plt.legend()
+plt.show()
+
+
+# Create lagged features
+forex_df = forex_df.withColumn("EUR_Lag1", F.lag("close_EUR", 1).over(Window.orderBy("Date")))
+forex_df = forex_df.withColumn("GBP_Lag1", F.lag("close_GBP", 1).over(Window.orderBy("Date")))
+forex_df = forex_df.withColumn("AUD_Lag1", F.lag("close_AUD", 1).over(Window.orderBy("Date")))
+forex_df = forex_df.withColumn("CAD_Lag1", F.lag("close_CAD", 1).over(Window.orderBy("Date")))
+forex_df = forex_df.withColumn("NZD_Lag1", F.lag("close_EUR", 1).over(Window.orderBy("Date")))
+forex_df = forex_df.withColumn("JPY_Lag1", F.lag("close_GBP", 1).over(Window.orderBy("Date")))
+forex_df = forex_df.withColumn("CHF_Lag1", F.lag("close_AUD", 1).over(Window.orderBy("Date")))
+
+forex_df = forex_df.dropna()
+
+
+
+### 3.1.3 Linear Regression with Lag Features (Forecasting)
+
+Linear Regression with Lag Features use the lagged GBPUSD value as the feature to predict the current GBPUSD value is one of the baseline forecasting model. It can predict today's closing price. The model leverages the natural temporal dependency in time series data. In many financial time series, yesterday's price is a strong predictor of today’s price due to momentum or persistence in market behavior.
+
+from pyspark.ml.regression import LinearRegression
+
+# Create a copy for Linear Regression
+df_lr = forex_df.withColumn("label", F.col("close_GBP"))
+
+# Assemble features using only "GBP_Lag1"
+lr_assembler = VectorAssembler(inputCols=["GBP_Lag1"], outputCol="features")
+df_lr = lr_assembler.transform(df_lr)
+
+# Now, df_lr contains "GBP_Lag1", "label", and the assembled "features"
+lr = LinearRegression(featuresCol="features", labelCol="label")
+lr_model = lr.fit(df_lr)
+lr_predictions = lr_model.transform(df_lr)
+lr_predictions.select("GBP_Lag1", "label", "prediction").show(5)
+
+
+# Assuming lr_predictions is your DataFrame with columns "label" and "prediction"
+# Evaluate RMSE
+rmse_evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+rmse = rmse_evaluator.evaluate(lr_predictions)
+print("RMSE: ", rmse)
+
+# Evaluate MAE
+mae_evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="mae")
+mae = mae_evaluator.evaluate(lr_predictions)
+print("MAE: ", mae)
+
+# Evaluate R² (coefficient of determination)
+r2_evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="r2")
+r2 = r2_evaluator.evaluate(lr_predictions)
+print("R²: ", r2)
+
+
+The model perform realy well with a very low Root Mean Squared Error,the different between predicted and actual values is minimal with only 0.0077, almost all the variability in the current GBPUSD value is captured as the R² is very close to 1. This strong performance demonstrates that GBP/USD exhibits high persistence, making lag features a highly effective baseline for forecasting. However, while these results are promising, it's important to consider that such high performance on a simple model may not capture sudden market shifts or external shocks, and further improvements might be achieved by incorporating additional features or more advanced models.
+
+## 3.2. Advanced Models
+
+### 3.2.1. Logistic Regression for Directional Prediction
+
+I built the binary classification model using logistic regression to predict weather the GBP/USD exchange rate will increase on a given day. 
+Build a classification model where the goal is to predict whether GBPUSD increases (label 1) when today's GBP/USD is greater than yesterday’s (GBP_Lag1) or not (label 0) on a given day. Then I contructed the lagged GBP/USE value into a feature vector and split and train the data, I use the MulticlassClassificationEvaluator to evaluate the result. 
+
+# --- Step 1: Create the binary label for directional prediction ---
+# Create a new column "direction": 1 if current GBPUSD > GBP_Lag1, else 0.
+df_direction = forex_df.withColumn("direction", F.when(F.col("close_GBP") > F.col("GBP_Lag1"), 1).otherwise(0))
+
+# --- Step 2: Assemble features ---
+# Here we use only the lagged GBPUSD value ("GBP_Lag1") as our feature.
+assembler = VectorAssembler(inputCols=["GBP_Lag1"], outputCol="features")
+df_direction = assembler.transform(df_direction)
+
+# Select only the necessary columns: the feature vector and the label ("direction")
+df_direction = df_direction.select("features", "direction")
+
+# --- Step 3: Split the Data ---
+train_data, test_data = df_direction.randomSplit([0.8, 0.2], seed=1234)
+
+# --- Step 4: Train the Logistic Regression Model ---
+lr = LogisticRegression(featuresCol="features", labelCol="direction", maxIter=100, threshold=0.5)
+lr_model = lr.fit(train_data)
+
+# --- Step 5: Make Predictions on the Test Set ---
+predictions = lr_model.transform(test_data)
+predictions.select("features", "direction", "prediction", "probability").show(5)
+
+# --- Step 6: Evaluate the Model ---
+# Use MulticlassClassificationEvaluator to compute accuracy.
+evaluator = MulticlassClassificationEvaluator(labelCol="direction", predictionCol="prediction", metricName="accuracy")
+accuracy = evaluator.evaluate(predictions)
+print("Logistic Regression Accuracy:", accuracy)
+
+
+This logistic regression model is not doing well as it accuracy of 47.7%, which is not much better than random guessing (50%).
+
+df_direction.groupBy("direction").count().show()
+
+
+print("Coefficients:", lr_model.coefficients)
+print("Intercept:", lr_model.intercept)
+
+
+Logistic regression equation:
+
+**logit(P(direction=1))=0.31717−0.24727×GBP_Lag1(giving GBP is around 1.6)
+
+So around 48% for direction=1—which is very close to a 50-50 split. This likely explains why the model is predicting nearly the same class for all observations and why its overall accuracy is only slightly above random guessing. However, a positive coefficient means that higher close_GBP values are associated with a higher probability of the price increasing (Direction = 1). The value is small, meaning the impact is weak—GBP’s previous price alone is not a strong predictor of future direction. A negative intercept means that without strong features, the model slightly favors predicting "Down" (Direction = 0). So I will try with Random Forest 
+
+### 3.2.2. Random Forest (using PySpark MLlib)
+
+Random Forest is particularly well-suited for this kind of financial forecasting because it is robust to overfitting, handles noisy data well, and provides insight into which features are most impactful. For further reading on its strengths and applications, see Breiman’s seminal paper on Random Forests (Breiman, 2001) and the comprehensive discussion in Zhou's book on ensemble methods (Zhou, 2012).
+
+First I use Spark's VectorAssembler to set the current "close_GBP" as the label and assembling a feature_columns(Lags values) from 7 currency pairs for our feature vector. Then split and train it on a Random Forest Regressor with 100 trees and a maximum depth of 5. It will answer these question:
+
+How well can we predict future GBPUSD prices using historical data and the given features?
+
+What are the important features that contribute to the prediction of currency prices?
+
+# Prepare the label column as the current GBPUSD value
+df_rf = forex_df.withColumn("label", F.col("close_GBP"))
+
+# Define the feature columns (all lag features)
+feature_columns = ['EUR_Lag1', 'GBP_Lag1', 'AUD_Lag1', 'CAD_Lag1', 'NZD_Lag1', 'JPY_Lag1', 'CHF_Lag1']
+
+# Assemble the features using VectorAssembler
+assembler = VectorAssembler(inputCols=feature_columns, outputCol="features")
+df_rf = assembler.transform(df_rf)
+
+# Select only the necessary columns for modeling
+df_rf = df_rf.select("features", "label")
+
+
+
+# Split the dataset into training and test sets (80% training, 20% testing)
+train_data, test_data = df_rf.randomSplit([0.8, 0.2], seed=1234)
+
+# Initialize the Random Forest Regressor
+rf = RandomForestRegressor(featuresCol="features", labelCol="label", numTrees=100, maxDepth=5)
+
+# Train the model on the training data
+rf_model = rf.fit(train_data)
+
+# Make predictions on the test data
+rf_predictions = rf_model.transform(test_data)
+rf_predictions.select("features", "label", "prediction").show(5)
+
+
+# Convert the DataFrame to an RDD of tuples (label, prediction)
+predictions_rdd = rf_predictions.rdd.map(lambda row: (row['label'], row['prediction']))
+
+# Create RegressionMetrics object
+metrics = RegressionMetrics(predictions_rdd)
+
+# Print multiple metrics
+print(f"RMSE: {metrics.rootMeanSquaredError}")
+print(f"Mean Squared Error (MSE): {metrics.meanSquaredError}")
+print(f"Mean Absolute Error (MAE): {metrics.meanAbsoluteError}")
+print(f"R2: {metrics.r2}")
+print(f"Explained Variance: {metrics.explainedVariance}")
+
+The Random Forest model achieved a low RMSE of approximately 0.0194, indicating that, on average, the predictions deviate only slightly from the actual values. Additionally, by examining the feature importances derived from the model, we found that the previous day's GBP/USD price (GBP_Lag1) was the most significant predictor, followed by the other lag features. This suggests that there is strong persistence in the GBP/USD time series, and historical prices have a substantial influence on future prices.
+
+df_rf.printSchema()
+df_rf.show(5)
+
+
+DO NOT RUN THIS ONE AGAIN IT TAKE A LONG TIME
+
+# Split into train & test sets
+train_data, test_data = df_rf.randomSplit([0.8, 0.2], seed=42)
+
+# Define Random Forest Model
+rf = RandomForestRegressor(featuresCol="features", labelCol="label")
+
+# Define parameter grid for tuning
+param_grid = (ParamGridBuilder()
+              .addGrid(rf.numTrees, [50, 100, 150])   
+              .addGrid(rf.maxDepth, [5, 10, 15])      
+              .build())
+
+# Define evaluator
+evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+
+# Cross Validator Setup
+cross_val = CrossValidator(estimator=rf, 
+                           estimatorParamMaps=param_grid, 
+                           evaluator=evaluator, 
+                           numFolds=5)  # 5-Fold CV
+
+# Fit cross-validation model
+cv_model = cross_val.fit(train_data)
+
+# Evaluate on test set
+best_model = cv_model.bestModel
+test_predictions = best_model.transform(test_data)
+test_rmse = evaluator.evaluate(test_predictions)
+
+print(f"Best Model Test RMSE: {test_rmse:.4f}")
+
+
+Low error—the model is making highly accurate predictions.
+Compared to earlier RMSE values (~0.0194), the tuned model performs significantly better.
+
+Feature Importance Analysis (What Drives GBP/USD?)
+Check which features have the highest impact on predictions.
+
+feature_importances = best_model.featureImportances.toArray()
+feature_names = feature_columns
+
+# Create DataFrame
+importance_df = pd.DataFrame({"Feature": feature_names, "Importance": feature_importances})
+importance_df = importance_df.sort_values(by="Importance", ascending=False)
+
+# Plot
+plt.figure(figsize=(10,5))
+plt.barh(importance_df["Feature"], importance_df["Importance"], color="blue")
+plt.xlabel("Feature Importance")
+plt.ylabel("Feature Name")
+plt.title("Feature Importance in Random Forest Model")
+plt.gca().invert_yaxis()
+plt.show()
+
+
+This helps understand which indicators (EUR Lag, GBP Lag, etc.) are most important.
+
+### 6.3.4 Gradient Boosting in PySpark
+
+Gradient Boosting is an ensemble method that sequentially adds weak learners usualy decision trees to form a strong learner to correct the residual errors of prior models, resulting in high predictive accuracy for complex, non-linear relationships(Gradient). First, I get a DataFrame ready for gradient boosting by setting the close_GBP as the label and assembling lagged features into a feature vector using PySpark's VectorAssembler. Then plit and initialised a GBTRegressor with parameters maximum iterations 50, and a tree depth of 5 to control the number of iterations and tree depth. Then train the model on the training data and predict it on the test set. Finally, I evaluate the model performance with RMSE, MAE, and R². 
+
+# --- Data Preparation for Gradient Boosting ---
+# Create a new DataFrame (df_gbt) from df_spark which already contains lag features
+df_gbt = forex_df.withColumn("label", F.col("close_GBP"))
+
+# Assemble the features using VectorAssembler
+gbt_assembler = VectorAssembler(inputCols=feature_columns, outputCol="features")
+df_gbt = gbt_assembler.transform(df_gbt)
+
+# Select only the necessary columns for modeling
+df_gbt = df_gbt.select("features", "label")
+
+
+
+
+# Split the dataset into training and test sets (80% training, 20% testing)
+train_data, test_data = df_gbt.randomSplit([0.8, 0.2], seed=1234)
+
+# --- Gradient Boosting Regressor ---
+# Initialize the GBTRegressor (adjust maxIter and maxDepth as needed)
+gbt = GBTRegressor(featuresCol="features", labelCol="label", maxIter=50, maxDepth=5)
+
+# Train the model on the training data
+gbt_model = gbt.fit(train_data)
+
+# Make predictions on the test data
+gbt_predictions = gbt_model.transform(test_data)
+gbt_predictions.select("features", "label", "prediction").show(5)
+
+# --- Evaluate the Gradient Boosting Model ---
+evaluator_rmse = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+evaluator_mae  = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="mae")
+evaluator_r2   = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="r2")
+
+gbt_rmse = evaluator_rmse.evaluate(gbt_predictions)
+gbt_mae  = evaluator_mae.evaluate(gbt_predictions)
+gbt_r2   = evaluator_r2.evaluate(gbt_predictions)
+
+print("Gradient Boosting RMSE:", gbt_rmse)
+print("Gradient Boosting MAE:", gbt_mae)
+print("Gradient Boosting R²:", gbt_r2)
+
+Having this result and compare it with Random Forest, I can see that both models are strong but slightly different, for example Random Forest has better RMSE(0.0194) and GBT is 0.0124. However GBT has better explain there variance with  R² (0.9972 vs. 0.9929)
+
+###  Using Macroeconomic Features in ML Models & Optimization
+
+What is the correlation between GBPUSD and macroeconomic indicators (e.g., GDP, inflation, unemployment)?
+
+
+In other to capture broader economic forces that effect the currency movement and in-depth understanding of the correlation and better prediction in the UK exchange rate, I decided to collect macroeconomic data uncluding GDP, inflation, unemployment into the forex dataset. This macroeconomic dataset I got from the World Bank adding into the forex dataset for in-depth understanding of the correlation and better prediction. This can help understand the changes in economic health, monetary policy adjustments, or what shifts in investor sentiment. First I will compute the correlation between GBP and 3 macroeconomic indicators. 
+
+
+!pip install wbdata
+
+import datetime
+indicators = {
+    'NY.GDP.MKTP.CD': 'GDP',         # GDP (current US$)
+    'FP.CPI.TOTL.ZG': 'Inflation',    # Inflation (consumer prices)
+    'SL.UEM.TOTL.ZS': 'Unemployment'   # Unemployment (% of labor force)
+}
+
+data_start = datetime.datetime(1990, 1, 1)
+data_end = datetime.datetime(2024, 12, 31)
+
+# Specify a country (e.g., 'GBR' for United Kingdom)
+macroeconomic_data_pd = wbdata.get_dataframe(
+    indicators, 
+    country='GBR',
+    date=(data_start, data_end)
+)
+
+# Convert the index to datetime if needed
+macroeconomic_data_pd.index = pd.to_datetime(macroeconomic_data_pd.index)
+print(macroeconomic_data_pd.head())
+
+
+spark = SparkSession.builder.appName('MacroeconomicData').getOrCreate()
+macro_spark = spark.createDataFrame(macroeconomic_data_pd.reset_index())
+#macro_spark.show()
+
+
+# Write the Spark DataFrame to a Parquet file on HDFS
+output_path = "hdfs://lena-master/user/tnguy001/Coursework2/macroeconomic_data.parquet"
+macro_spark.write.mode("overwrite").parquet(output_path)
+
+
+# Check if the file is in hadoop
+hdfs dfs -ls /user/tnguy001
+
+# Read the Parquet file from HDFS
+df_macro = spark.read.parquet("hdfs://lena-master/user/tnguy001/Coursework2/macroeconomic_data.parquet")
+df_macro.show(30)
+
+
+# Print the schema of the macroeconomic data
+df_macro.printSchema()
+
+# Print the schema of the currency rates data
+forex_df.printSchema()
+
+
+# Convert 'date' in macroeconomic_data_df to a date type
+df_macro = df_macro.withColumn("date", to_date("date"))
+
+
+from pyspark.sql.functions import year, col
+
+# Extract Year from Date columns
+df_macro = df_macro.withColumn("Year", year(col("date")))
+forex_df = forex_df.withColumn("Year", year(col("Date")))
+
+# Perform Left Join (keeps all forex records, adds macro data)
+joined_df = forex_df.join(df_macro, on="Year", how="left")
+
+
+# Show the results
+joined_df.show(5)
+
+
+### Correlation Analysis Between Macroeconomic Indicators & Exchange Rates
+
+# Compute correlation between UK macroeconomic indicators and GBP exchange rates
+correlations = joined_df.select(
+    corr("close_GBP", "GDP").alias("GBP_GDP_corr"),
+    corr("close_GBP", "Inflation").alias("GBP_Inflation_corr"),
+    corr("close_GBP", "Unemployment").alias("GBP_Unemployment_corr"),
+    corr("close_GBP", "close_EUR").alias("GBP_EUR_corr"),
+    corr("close_GBP", "close_AUD").alias("GBP_AUD_corr"),
+    corr("close_GBP", "close_CAD").alias("GBP_CAD_corr"),
+    corr("close_GBP", "close_NZD").alias("GBP_NZD_corr"),
+    corr("close_GBP", "close_JPY").alias("GBP_JPY_corr"),
+    corr("close_GBP", "close_CHF").alias("GBP_CHF_corr"),
+)
+
+# Show results
+correlations.show()
+
+
+import matplotlib.pyplot as plt
+import pandas as pd
+# Convert the single row of correlations to a Pandas DataFrame
+corr_pd = correlations.toPandas()
+
+# Transpose for easier plotting (optional)
+corr_pd = corr_pd.T.reset_index()
+corr_pd.columns = ['Feature_Pair', 'Correlation']
+
+# Create a bar plot for the correlation values
+plt.figure(figsize=(10, 6))
+plt.bar(corr_pd['Feature_Pair'], corr_pd['Correlation'], color='skyblue')
+plt.xlabel("Feature Pair")
+plt.ylabel("Correlation")
+plt.title("Correlation between GBP/USD and Macro & Currency Pairs")
+plt.xticks(rotation=45, ha="right")
+plt.grid(axis='y')
+plt.tight_layout()
+plt.show()
+
+Surprisingly, when I first look at it GBP does not correlate with GDP and Inflation, but think of it this way, it is just a slightly weak inverse relationship, what I expected was higher GDP to strengthen its currency, however, exchange rates are influenced by many different factors. When GDP increases, other factors such as shifts in monetary policy, or rising in inflation, or global economic factors might offset any positive impact on the currency. Noted that GDP is collected by year so may not capture the daily market sentiment or some short-term fluctuation in the market. 
+
+On average, when inflation rises, the GBP tends to weaken relative to the USD. When inflation is high it can erode the purchasing power of a currency and can lead the central banks to lower interest rates or any other factor to control the rising prices leading to depreciation by less attractive to investors. Additionally, higher inflation makes the market uncertain and less powerful. 
+
+unemployment has a positive correlation with GBP/USD might seem counterintuitive. In general what we expect is higher unemployment which weakens a currency by signaling economic distress. However, there are so many factors that can explain why it behaves like that: First, again the unemployment data collected annually cannot capture short-term market dynamics, and can lead to a spurious or confounded correlation. Secondly, when the market is under stress GBP might be perceived as a relatively safe-haven asset(Safe-Haven Currency). This safe-haven behaviour can drive up demand for GBP, therefore strengthening it relative to the USD. 
+
+
+### Train ML Models and Hyperparameter Tuning with Macroeconomic Data
+
+I will train the "close_GBP", "GBP_Lag1", "GBP_MA30", "GBP_STD30", "GDP", "Inflation", "Unemployment" with Gradient Boosting model to learn both short-term dynamics and long-term economic trends , which can help to improve the forecast accuracy. This approach is especially valuable in forex markets where fundamental economic factors often influence exchange rates. For more details on the importance of macroeconomic factors in currency valuation, see Friedman (2001) and Zhou (2012).
+
+df_ml = joined_df.select(
+    "Year", "close_GBP", "GBP_Lag1", 
+    "GBP_MA30", "GBP_STD30", "GDP", "Inflation", "Unemployment"
+).dropna()  # Drop any rows with missing values
+
+# Show dataset
+df_ml.show(5)
+
+
+# 1️⃣ Assemble features
+feature_cols = ["GBP_Lag1", "GBP_MA30", "GBP_STD30", "GDP", "Inflation", "Unemployment"]
+assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
+df_ml = assembler.transform(df_ml).select("features", col("close_GBP").alias("label"))
+
+# 2️⃣ Train-test split (80% train, 20% test)
+train_data, test_data = df_ml.randomSplit([0.8, 0.2], seed=42)
+
+
+# Define the Gradient Boosting Regressor model
+gbt = GBTRegressor(featuresCol="features", labelCol="label", maxIter=100, maxDepth=5, seed=42)
+
+# Train the model
+gbt_model = gbt.fit(train_data)
+
+
+# Make predictions
+predictions = gbt_model.transform(test_data)
+
+# Define evaluator for RMSE, MAE, and R²
+evaluator_rmse = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+evaluator_mae = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="mae")
+evaluator_r2 = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="r2")
+
+# Compute evaluation metrics
+rmse = evaluator_rmse.evaluate(predictions)
+mae = evaluator_mae.evaluate(predictions)
+r2 = evaluator_r2.evaluate(predictions)
+
+print(f"✅ Gradient Boosting RMSE: {rmse}")
+print(f"✅ Gradient Boosting MAE: {mae}")
+print(f"✅ Gradient Boosting R²: {r2}")
+
+
+The training result is impressive with RMSE 0.013 indicate that the predictions deviate only slightly from the actual GBP/USD closing prices. And nearly 99.68% of the variance in the data is explained by the model which still give me a double but the intergrate between exchange rate and macroeconomic factors make me believe that it can substantially enhance forecasting accuracy by capturing both short-term market dynamics and underlying economic trends. Down here I compute the hyperparameter tuning on the GBT using a grid search over all the parameteres such as numbers of interations and tree depth and learning rate with the cross-validation. This help to optimize the accurracy of the model by finding the best combination of parameters that minimizes the RMSE. Beside that, I compute the Random Forest model as a benchmark for forecasting performance and provides insights into feature importance, to check which feature will give the better prediction. All of this allow us to compare advanced ensemble methods and understand the relative influence of various input features on currency price movements.
+
+# Define parameter grid
+paramGrid = (ParamGridBuilder()
+             .addGrid(gbt.maxIter, [50, 100])
+             .addGrid(gbt.maxDepth, [3, 5, 7])
+             .addGrid(gbt.stepSize, [0.05, 0.1, 0.2])
+             .build())
+
+# Define CrossValidator
+cv = CrossValidator(estimator=gbt, 
+                    estimatorParamMaps=paramGrid, 
+                    evaluator=evaluator_rmse, 
+                    numFolds=3)
+
+# Train with cross-validation
+cv_model = cv.fit(train_data)
+
+# Get best model and evaluate
+best_model = cv_model.bestModel
+best_predictions = best_model.transform(test_data)
+best_rmse = evaluator_rmse.evaluate(best_predictions)
+
+print(f"🚀 Best Gradient Boosting Model RMSE: {best_rmse}")
+
+
+# Define input features
+feature_cols = ["open_GBP", "high_GBP", "low_GBP", "close_GBP"] 
+assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
+
+# Transform data
+df_ml = assembler.transform(joined_df)
+df_ml = df_ml.select("features", "close_GBP")  # Target variable: next day’s close price
+
+# Split data into training & test sets
+train_data, test_data = df_ml.randomSplit([0.8, 0.2], seed=42)
+
+# Train Random Forest model
+rf = RandomForestRegressor(featuresCol="features", labelCol="close_GBP", numTrees=100)
+rf_model = rf.fit(train_data)
+
+# Predictions
+predictions = rf_model.transform(test_data)
+
+# Evaluate model performance
+evaluator = RegressionEvaluator(labelCol="close_GBP", predictionCol="prediction", metricName="rmse")
+rmse = evaluator.evaluate(predictions)
+print(f"Random Forest RMSE: {rmse}")
+
+# Feature Importance
+feature_importance = rf_model.featureImportances
+print("Feature Importances: ", feature_importance)
+
+
+After all, the Gradient Boosting model slightly outperformed the Random Forest model with 0.01251 compared to 0.01344. Which mean that the boosting approach is more effective at minimizing the error in prediction. And importantly we can see that the previous day's closing price in the feature important is the strongest predictor while the open price contributes very little. These insights are crucial as they not only validate the use of ensemble methods for financial forecasting but also highlight the relative importance of different price components in predicting future exchange rates.
+
+# Results and Discussion<a name="result"></a>
+## Summary of Findings
+
+In this analysis I have leveraged big data technologies using Pyspark and Spark MLlib to process historical forex data from the 3 sources Yahoo Finance, Alpha Vantage and World Bank from 2000 to 2025. I computed some EDA techniques to see the trends, correlation and some key technical indicators—such as 30-day moving averages, rolling standard deviations, and daily returns—and applied various analytical techniques including correlation analysis, change point detection, and so on. And for predicting I use the baseline model as a simple moving average provided a reference point, while improving it with the advanced model such as Random Forest and Gradient Boosting which give me impressive results with RMSE approximately 0.013 and very high R² scores which show the robustness of my prediction. Moreover, the logistic regression for directional prediction that I use gives me an enriching understanding of our currency dynamics.  
+
+## Comparative Analysis (Yearly Trends and Other Currency Pairs)
+
+By aggregating daily data into yearly averages and applying linear regression on the long-term trends of GBP/USD, I now confirm that there is a persistent trend over the years. The correlation analysis shows that among multiple currency pairs while European currencies like EUR and GBP exhibit strong positive correlations, commodity-linked currencies (AUD, CAD, NZD) also tend to move together. In contrast, safe-haven currencies such as JPY and CHF display weaker or even negative correlations with risk-sensitive currencies, particularly under market stress. These differences highlight that although some relationships remain consistent over time, short-term dynamics and external events can significantly alter inter-currency relationships.
+
+## Discussion on GBPUSD Behavior and Volatility
+
+GBP/USD has significant volatility during the economic stress, indicated by the spikes in rolling standard deviations and abrupt shifts in the 30-day moving average. By annotating the key economic events such as the Crash in 2008 or Brexit, Covid or some major changes in policy allows us to correlate these events with distinct market shifts and potential change points detected in the moving average. All of this shows that GBP/USD is highly sensitive to both domestic and global economic conditions. Combining with Macroeconomic indicators was a big help allowing us to have more diverting understanding in the price movement and the relationship between the exchange rate and economic factors moreover boost our prediction accuracy. This multi-faceted approach offers valuable insights for risk management, trading strategies, and economic policy analysis.
+
+
+# Limitations and Scalability<a name="limit"></a>
+
+While we have a decent performance in analysis and predicting, however we are still having some limitations. First, we are reliance on historical data so we may not able to capture sudden market shifts like politic event that are happen at the moment which I call the economic crisis as new American's President policy, and some trading deals are happening, unanticipated global events making the market more volatility and unpredictable. The models also primarily use a limited set of features, which might oversimplify the complex drivers of exchange rates. Moreover the Macroeconomic indicators doesn't have a 100% effect on the forex price movement as there is a mismatch between daily forex data and yearly macroeconomic indicators can introduce noise into the models. And All the historical data I got is free access so does have a limit in full scale data. Resource constraints further limit our ability to implement more computationally intensive models such as deep learning approaches (e.g., LSTMs) or real-time analytics; our current setup lack advanced GPU clusters or large-scale distributed processing capabilities. 
+
+To improve these constraints, I would integrate additional macroeconomic indicators from multiple sources, or some market sentiment combining NLP, and explore the deep learning architectures (which I was tempted to try but there is a difficulty in setting up with Lena cluster note and the limitation of Spark MLlib). Future improvements should focus on enhanced feature engineering, including higher frequency macro data and sentiment analysis from social media or news feeds, as well as more sophisticated methods for real-time processing and backtesting. These steps would provide a more robust, comprehensiv
+
+
+# Conclusion<a name="con"></a>
+
+In conclusion, I have demonstrated that combining technical indicators with macroeconomic data has significantly improved our understanding and predicting of GBP/USD behaviour. I have developed from baseline model to advanced model to capture trends, volatility, and market shifts, especially around key economic events. These findings highlight the importance of integrating diverse data sources for robust forex analysis, while future research should focus on incorporating higher-frequency forex data and the market sentiment analysis from social media, or news feeds(Bollen, 2011) and more in-dept procedure as real-time predicting and backtesting and exploring some neural network technique like LSTM to enhance prediction accuracy by capturing non-linear relationships and long-term dependencies in time series data (Fischer & Krauss, 2018; Bollen et al., 2011).
+
+
+# References<a name="ref"></a>
+
+- Hull, J. (2018). Options, Futures, and Other Derivatives. Pearson.
+
+- Zaharia, M., et al. (2016). Apache Spark: A Unified Engine for Big Data Processing. Communications of the ACM, 59(11), 56-65.
+
+- Market outlook 2025: Navigating cross-currents https://www.jpmorgan.com/insights/global-research/outlook/market-outlook © 2025 JPMorgan Chase & Co.
+
+- Bollinger, J. (2001). Bollinger on Bollinger Bands. McGraw Hill Professional.
+
+- Breiman, L. (2001). Random Forests. Machine Learning, 45(1), 5-32.
+
+- Zhou, Z.-H. (2012). Ensemble Methods: Foundations and Algorithms. Chapman and Hall/CRC.
+
+- Gradient Boosting Algorithm: A Complete Guide for Beginners https://www.analyticsvidhya.com/blog/2021/09/gradient-boosting-algorithm-a-complete-guide-for-beginners/
+
+- Investopedia, "Safe-Haven Currency," available at: https://www.investopedia.com/terms/s/safe-haven.asp
+
+- Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of Statistics, 29(5), 1189–1232.
+
+- Fischer, T., & Krauss, C. (2018). Deep learning with long short-term memory networks for financial market predictions. European Journal of Operational Research, 270(2), 654-669.
+
+- Bollen, J., Mao, H., & Zeng, X. (2011). Twitter mood predicts the stock market. Journal of Computational Science, 2(1), 1-8.
+
+# Appendices<a name="app"></a>
